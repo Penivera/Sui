@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.engine import Result
 from sqlalchemy import func
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.models.wallet import Wallet
 from app.models.transaction import Transaction, TransactionType, TransactionStatus
@@ -163,7 +163,7 @@ class OfframpService:
         
         transaction.status = TransactionStatus.COMPLETED
         transaction.transaction_hash = transaction_hash
-        transaction.completed_at = datetime.utcnow()
+        transaction.completed_at = datetime.now(timezone.utc)
         
         await db.commit()
         
