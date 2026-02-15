@@ -1,7 +1,7 @@
 """Transaction model for tracking all wallet transactions."""
 from sqlalchemy import String, DateTime, ForeignKey, Numeric, Enum as SQLEnum
 from sqlalchemy.orm import mapped_column, Mapped, relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, TYPE_CHECKING
 import enum
 
@@ -9,6 +9,11 @@ from app.core.database import Base
 
 if TYPE_CHECKING:
     from app.models.wallet import Wallet
+
+
+def utc_now():
+    """Get current UTC time."""
+    return datetime.now(timezone.utc)
 
 
 class TransactionType(str, enum.Enum):
@@ -45,9 +50,9 @@ class Transaction(Base):
     recipient_address: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
     description: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     extra_data: Mapped[Optional[str]] = mapped_column(String(2000), nullable=True)  # JSON string for extra data
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     
     # Relationships
     wallet: Mapped["Wallet"] = relationship("Wallet", back_populates="transactions")

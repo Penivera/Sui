@@ -3,6 +3,7 @@ from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.engine import Result
+from sqlalchemy import func
 import requests
 import json
 import aiofiles
@@ -152,7 +153,7 @@ class BillService:
             "MobileNetwork": network,
             "Amount": amount,
             "MobileNumber": phone_number,
-            "CallBackURL": "https://cypher-85fk.onrender.com/callback"
+            "CallBackURL": settings.CALLBACK_URL
         }
         
         try:
@@ -314,12 +315,12 @@ class BillService:
         transactions = result.scalars().all()
         
         # Get total count
-        count_query = select(Transaction).where(
+        count_query = select(func.count(Transaction.id)).where(
             Transaction.wallet_id == wallet_id,
             Transaction.transaction_type.in_([TransactionType.BILL_PAYMENT, TransactionType.AIRTIME])
         )
         count_result: Result = await db.execute(count_query)
-        total_count = len(count_result.scalars().all())
+        total_count = count_result.scalar() or 0
         
         return {
             "transactions": [

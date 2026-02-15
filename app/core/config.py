@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     
     # Bill payment URLs
     BILL_URL: str = os.getenv("BILL_URL", "https://www.nellobytesystems.com/APICancelV1.asp")
+    CALLBACK_URL: str = os.getenv("CALLBACK_URL", "https://cypher-85fk.onrender.com/callback")
     
     # Security settings
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")

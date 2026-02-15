@@ -1,8 +1,10 @@
 """Offramp service for handling crypto to fiat conversions."""
+import json
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.engine import Result
+from sqlalchemy import func
 from datetime import datetime
 
 from app.models.wallet import Wallet
@@ -70,7 +72,7 @@ class OfframpService:
             amount=amount,
             currency="SUI",
             description=f"Offramp {amount} SUI to fiat",
-            extra_data=str(metadata)
+            extra_data=json.dumps(metadata)
         )
         
         try:
@@ -204,9 +206,9 @@ class OfframpService:
         
         transaction.status = TransactionStatus.CANCELLED
         if reason:
-            current_metadata = eval(transaction.extra_data) if transaction.extra_data else {}
+            current_metadata = json.loads(transaction.extra_data) if transaction.extra_data else {}
             current_metadata["cancellation_reason"] = reason
-            transaction.extra_data = str(current_metadata)
+            transaction.extra_data = json.dumps(current_metadata)
         
         await db.commit()
         
@@ -246,12 +248,12 @@ class OfframpService:
         transactions = result.scalars().all()
         
         # Get total count
-        count_query = select(Transaction).where(
+        count_query = select(func.count(Transaction.id)).where(
             Transaction.wallet_id == wallet_id,
             Transaction.transaction_type == TransactionType.OFFRAMP
         )
         count_result: Result = await db.execute(count_query)
-        total_count = len(count_result.scalars().all())
+        total_count = count_result.scalar() or 0
         
         return {
             "transactions": [
